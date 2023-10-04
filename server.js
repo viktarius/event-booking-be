@@ -4,7 +4,7 @@ const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require("mongoose");
 
-const EventModel = require("./src/models/event.model.js");
+const Event = require("./src/schemas/event.schema");
 
 const server = express();
 const port = 3000;
@@ -45,13 +45,15 @@ server.use('/graphql', graphqlHTTP({
             return events;
         },
         createEvent: ({ body }) => {
+            console.log(body);
             const { title, description, price, date } = body;
-            const event = new EventModel({
+            const event = new Event({
                 title,
                 description,
                 price,
                 date: new Date(date)
             })
+            console.log(event);
             return event.save().then(res => {
                 console.log(res);
                 return { ...res._doc }
