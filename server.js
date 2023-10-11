@@ -41,11 +41,15 @@ server.use('/graphql', graphqlHTTP({
         }
     `),
     rootValue: {
-        events: () => {
-            return events;
+        events: async () => {
+            try {
+                const events = await Event.find()
+                return events.map(event => ({ ...event._doc, _id: event.id }));
+            } catch (error) {
+                throw error;
+            }
         },
         createEvent: ({ body }) => {
-            console.log(body);
             const { title, description, price, date } = body;
             const event = new Event({
                 title,
@@ -53,12 +57,9 @@ server.use('/graphql', graphqlHTTP({
                 price,
                 date: new Date(date)
             })
-            console.log(event);
             return event.save().then(res => {
-                console.log(res);
-                return { ...res._doc }
+                return { ...res._doc, _id: event._doc._id.toString() }
             }).catch(err => {
-                console.log(err);
                 throw err;
             });
         }
