@@ -1,6 +1,11 @@
-const Event = require("../../mongoose/models/event");
-const User = require("../../mongoose/models/user");
-const bcrypt = require("bcryptjs");
+const Event = require('../../mongoose/models/event');
+const User = require('../../mongoose/models/user');
+const Booking = require('../../mongoose/models/booking');
+
+const bcrypt = require('bcryptjs');
+
+const MAIN_USER = '6534172a4ce7479994f80f68';
+
 const events = async eventIds => {
     try {
         const events = await Event.find({ _id: { $in: eventIds } });
@@ -17,6 +22,19 @@ const events = async eventIds => {
         throw err;
     }
 };
+
+const singleEvent = async eventId => {
+    try {
+        const event = await Event.findById(eventId);
+        return {
+            ...event._doc,
+            _id: event.id,
+            creator: user.bind(this, event.creator)
+        }
+    } catch (err) {
+        throw err;
+    }
+}
 
 const user = async userId => {
     try {
@@ -52,10 +70,10 @@ module.exports = {
                 description,
                 price,
                 date: new Date(date),
-                creator: '6534172a4ce7479994f80f68'
+                creator: MAIN_USER
             })
             const createdEvent = await event.save();
-            const creator = await User.findById('6534172a4ce7479994f80f68');
+            const creator = await User.findById(MAIN_USER);
             if (!creator) {
                 throw new Error('User not exists');
             }
@@ -68,6 +86,19 @@ module.exports = {
             }
         } catch (error) {
             throw error;
+        }
+    },
+    bookings: async () => {
+        try {
+            const bookings = await Booking.find();
+            return bookings.map(booking => ({
+                ...booking._doc,
+                _id: booking.id,
+                user: user.bind(this, booking._doc.user),
+                event: singleEvent.bind(this, booking._doc.event)
+            }))
+        } catch (err) {
+            throw err;
         }
     },
     users: async () => {
@@ -104,6 +135,38 @@ module.exports = {
             }
         } catch (error) {
             throw error;
+        }
+    },
+    bookEvent: async ({ eventId }) => {
+        try {
+            const event = await Event.findById(eventId);
+            const booking = new Booking({
+                user: MAIN_USER,
+                event
+            })
+
+            const result = await booking.save();
+            return {
+                ...result._doc,
+                _id: result.id,
+                user: user.bind(this, booking._doc.user),
+                event: singleEvent.bind(this, booking._doc.event)
+            }
+        } catch (err) {
+            throw err;
+        }
+    },
+    cancelEvent: async ({ bookingId }) => {
+        try {
+            const booking = Booking.findById(bookingId).populate('event')
+            const event = {
+                ...booking._doc.event,
+                id: booking.event.id,
+                creator: user.bind(this, booking.event._doc.creator),
+            }
+            await Booking.deleteOne({ _id: bookingId });
+        } catch (err) {
+            throw err;
         }
     }
 }
