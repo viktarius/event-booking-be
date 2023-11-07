@@ -2,7 +2,6 @@ const User = require('../../mongoose/models/user');
 const Event = require('../../mongoose/models/event');
 
 const { transformEvent } = require('./helpers/transform');
-const {MAIN_USER} = require('./helpers/consts');
 
 module.exports = {
     events: async () => {
@@ -13,7 +12,10 @@ module.exports = {
             throw error;
         }
     },
-    createEvent: async ({ body }) => {
+    createEvent: async ({ body }, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!')
+        }
         try {
             const { title, description, price, date } = body;
             const event = new Event({
@@ -21,10 +23,10 @@ module.exports = {
                 description,
                 price,
                 date: new Date(date),
-                creator: MAIN_USER
+                creator: req.userId
             })
             const createdEvent = await event.save();
-            const creator = await User.findById(MAIN_USER);
+            const creator = await User.findById(req.userId);
             if (!creator) {
                 throw new Error('User not exists');
             }

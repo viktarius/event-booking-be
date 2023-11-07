@@ -1,3 +1,0 @@
-const MAIN_USER = '6534172a4ce7479994f80f68';
-
-exports.MAIN_USER = MAIN_USER;

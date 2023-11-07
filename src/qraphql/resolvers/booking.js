@@ -2,10 +2,12 @@ const Event = require('../../mongoose/models/event');
 const Booking = require('../../mongoose/models/booking');
 
 const { transformBooking, transformEvent } = require('./helpers/transform');
-const { MAIN_USER } = require('./helpers/consts');
 
 module.exports = {
-    bookings: async () => {
+    bookings: async (_, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!')
+        }
         try {
             const bookings = await Booking.find();
             return bookings.map(transformBooking);
@@ -13,11 +15,14 @@ module.exports = {
             throw err;
         }
     },
-    bookEvent: async ({ eventId }) => {
+    bookEvent: async ({ eventId }, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!')
+        }
         try {
             const event = await Event.findById(eventId);
             const booking = new Booking({
-                user: MAIN_USER,
+                user: req.userId,
                 event
             })
 
@@ -27,7 +32,10 @@ module.exports = {
             throw err;
         }
     },
-    cancelBooking: async ({ bookingId }) => {
+    cancelBooking: async ({ bookingId }, req) => {
+        if (!req.isAuth) {
+            throw new Error('Unauthenticated!')
+        }
         try {
             const booking = await Booking.findById(bookingId).populate('event');
             const event = transformEvent(booking.event)

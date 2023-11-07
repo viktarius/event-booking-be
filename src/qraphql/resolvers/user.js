@@ -1,6 +1,6 @@
-const User = require('../../mongoose/models/user');
-
 const bcrypt = require('bcryptjs');
+
+const User = require('../../mongoose/models/user');
 
 module.exports = {
     createUser: async ({ body }) => {
@@ -13,7 +13,7 @@ module.exports = {
             const hashedPassword = await bcrypt.hash(password, 12);
             const user = new User({
                 email,
-                hashedPassword,
+                password: hashedPassword,
             })
 
             const savedUser = await user.save();
