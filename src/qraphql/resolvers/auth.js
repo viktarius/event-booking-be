@@ -13,7 +13,7 @@ module.exports = {
         if (!isValidPassword) {
             throw new Error('Invalid credentials!');
         }
-        const token = jwt.sign({ userId: user.id, email: user.email }, 'super$ecretKey', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_TOKEN_SECRET_KEY, { expiresIn: '1h' });
         return {
             userId: user.id,
             token,
