@@ -9,7 +9,8 @@ module.exports = {
             throw new Error('Unauthenticated!')
         }
         try {
-            const bookings = await Booking.find();
+            const { userId } = req;
+            const bookings = await Booking.find({ user: userId });
             return bookings.map(transformBooking);
         } catch (err) {
             throw err;
