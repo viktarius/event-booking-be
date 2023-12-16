@@ -24,7 +24,7 @@ module.exports = {
             const event = await Event.findById(eventId);
             const booking = new Booking({
                 user: req.userId,
-                event
+                event: event.id,
             })
 
             const result = await booking.save();

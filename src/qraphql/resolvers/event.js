@@ -6,7 +6,7 @@ const { transformEvent } = require('./helpers/transform');
 module.exports = {
     events: async () => {
         try {
-            const events = await Event.find()
+            const events = await Event.find();
             return events.map(transformEvent);
         } catch (error) {
             throw error;

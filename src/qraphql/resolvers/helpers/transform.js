@@ -1,11 +1,16 @@
+const DataLoader = require('dataloader')
+
 const Event = require('../../../mongoose/models/event');
 const User = require('../../../mongoose/models/user');
+
+const eventLoader = new DataLoader((eventIds) => events(eventIds))
+
+const userLoader = new DataLoader((userIds) => User.find({ _id: { $in: userIds } }))
 
 const events = async eventIds => {
     try {
         const events = await Event.find({ _id: { $in: eventIds } });
-        events.map(transformEvent);
-        return events;
+        return events.map(transformEvent);
     } catch (err) {
         throw err;
     }
@@ -13,8 +18,7 @@ const events = async eventIds => {
 
 const singleEvent = async eventId => {
     try {
-        const event = await Event.findById(eventId);
-        return transformEvent(event);
+        return await eventLoader.load(eventId.toString());
     } catch (err) {
         throw err;
     }
@@ -22,11 +26,11 @@ const singleEvent = async eventId => {
 
 const user = async userId => {
     try {
-        const user = await User.findById(userId);
+        const user = await userLoader.load(userId.toString());
         return {
             ...user._doc,
             _id: user.id,
-            createdEvents: events.bind(this, user._doc.createdEvents),
+            createdEvents: () => eventLoader.loadMany(user._doc.createdEvents),
         };
     } catch (err) {
         throw err;
@@ -36,14 +40,14 @@ const user = async userId => {
 const transformEvent = event => ({
     ...event._doc,
     _id: event.id,
-    creator: user.bind(this, event.creator)
+    creator: () => user(event.creator)
 })
 
 const transformBooking = booking => ({
     ...booking._doc,
     _id: booking.id,
-    user: user.bind(this, booking.user),
-    event: singleEvent.bind(this, booking.event)
+    user: () => user(booking.user),
+    event: () => singleEvent(booking.event)
 })
 
 
